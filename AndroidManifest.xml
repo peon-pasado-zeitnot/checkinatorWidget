@@ -10,10 +10,13 @@
         <receiver android:name="nu.sawicki.hs.checkinator.app.CheckinatorWidgetProvider" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <intent-filter>
+                <action android:name="nu.sawicki.hs.checkinator.BACK_BUTTON_PRESSED"/>
+                <action android:name="nu.sawicki.hs.checkinator.FORWARD_BUTTON_PRESSED"/>
                 <action android:name="nu.sawicki.hs.checkinator.CHECKINATOR_WIDGET_UPDATE"/>
+
+
             </intent-filter>
+
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/checkinator_widget_info" />
         </receiver>
