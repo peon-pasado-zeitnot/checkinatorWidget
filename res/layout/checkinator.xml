@@ -32,7 +32,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:text="&#x003E;"
-            android:id="@+id/ForwardButton"
+            android:id="@+id/forwardButton"
             android:layout_gravity="right"
             android:layout_weight="8"/>
     </LinearLayout>

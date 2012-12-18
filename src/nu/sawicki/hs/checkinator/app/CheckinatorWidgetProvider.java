@@ -26,6 +26,8 @@ public class CheckinatorWidgetProvider extends AppWidgetProvider{
             + "FORWARD_BUTTON_PRESSED";
 
     private final static Client client = new Client();
+    private static Checkins checkins = null;
+    private static int currentCheckin = 0;
 
 
 
@@ -39,13 +41,15 @@ public class CheckinatorWidgetProvider extends AppWidgetProvider{
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] ids) {
-        for (int appWidgetID: ids) {
-            updateAppWidget(context, appWidgetManager, appWidgetID);
+        for (int appWidgetId: ids) {
+            updateAppWidget(context, appWidgetManager, appWidgetId);
             final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.checkinator);
             views.setOnClickPendingIntent(R.id.backButton, createIntent(context,
                     CHECKINATOR_WIDGET_BACK_BUTTON_PRESSED));
-            views.setOnClickPendingIntent(R.id.backButton, createIntent(context,
+            views.setOnClickPendingIntent(R.id.forwardButton, createIntent(context,
                     CHECKINATOR_WIDGET_FORWARD_BUTTON_PRESSED));
+            appWidgetManager.updateAppWidget(appWidgetId, views);
+
 
 
         }
@@ -76,6 +80,8 @@ public class CheckinatorWidgetProvider extends AppWidgetProvider{
                 if (users != null) {
                     if (!   users.isEmpty()){
                         views.setTextViewText(R.id.chekinText, users.get(0).getLogin());
+                        CheckinatorWidgetProvider.checkins = checkins;
+                        currentCheckin = 0;
                     }
                     else{
                         views.setTextViewText(R.id.chekinText,"This Beautiful Room Is Empty");
@@ -98,7 +104,7 @@ public class CheckinatorWidgetProvider extends AppWidgetProvider{
         super.onEnabled(context);
         Log.d("CheckinatorWidgetProvider.onEnabled","Widget Provider enabled.  Starting timer to update widget every ten minutes");
         AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        am.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 1000 * 60 * 10/600, createIntent(context,
+        am.setRepeating(AlarmManager.RTC, System.currentTimeMillis(), 1000 * 60 * 10000, createIntent(context,
                 CHECKINATOR_WIDGET_UPDATE));
     }
 
@@ -115,16 +121,56 @@ public class CheckinatorWidgetProvider extends AppWidgetProvider{
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
         Log.d("CheckinatorWidgetProvider.onReceive", "Received intent " + intent);
-        if (CHECKINATOR_WIDGET_UPDATE.equals(intent.getAction())) {
+        ComponentName thisAppWidget = new ComponentName(context.getPackageName(), getClass().getName());
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int ids[] = appWidgetManager.getAppWidgetIds(thisAppWidget);
+
+        if (intent.getAction().equals(CHECKINATOR_WIDGET_UPDATE)) {
             Log.d("CheckinatorWidgetProvider.onReceive", "wudget update");
-            ComponentName thisAppWidget = new ComponentName(context.getPackageName(), getClass().getName());
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
-            int ids[] = appWidgetManager.getAppWidgetIds(thisAppWidget);
-            for (int appWidgetID: ids) {
-                updateAppWidget(context, appWidgetManager, appWidgetID);
+
+            for (int appWidgetId: ids) {
+                updateAppWidget(context, appWidgetManager, appWidgetId);
             }
+        } else if (intent.getAction().equals(CHECKINATOR_WIDGET_BACK_BUTTON_PRESSED)){
+            for (int appWidgetId: ids) {
+                scrollBackAppWidget(context, appWidgetManager, appWidgetId);
+            }
+
+        }  else if (intent.getAction().equals(CHECKINATOR_WIDGET_FORWARD_BUTTON_PRESSED)){
+            for (int appWidgetId: ids) {
+                scrollForwardAppWidget(context, appWidgetManager, appWidgetId);
+            }
+
         }
     }
 
+    private void scrollForwardAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        Log.d("CheckinatorWidgetProvider","displaying next checkin");
+        final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.checkinator);
+        if(checkins!=null){
+            ArrayList<User> users = checkins.getUsers();
+            int tmpCurrentCheckin = ++currentCheckin;
+            if(tmpCurrentCheckin < users.size()){
+                currentCheckin = tmpCurrentCheckin;
+                views.setTextViewText(R.id.chekinText, users.get(currentCheckin).getLogin());
+            }
+
+        }
+         }
+
+    private void scrollBackAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        Log.d("CheckinatorWidgetProvider","displaying previous checkin");
+        final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.checkinator);
+        if(checkins!=null){
+            ArrayList<User> users = checkins.getUsers();
+            int tmpCurrentCheckin = --currentCheckin;
+            if(tmpCurrentCheckin >= 0){
+                currentCheckin = tmpCurrentCheckin;
+                views.setTextViewText(R.id.chekinText, users.get(currentCheckin).getLogin());
+            }
+
+
+        }
+    }
 
 }
